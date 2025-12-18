@@ -24,6 +24,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 AGENT_DISCOUNT_MULTIPLIER = 0.8  # 20% off
+AGENT_PACKAGE_PRICE = 4000  # Package price for agent activation
 
 # --------------------------------------------------
 # PRODUCT DATA
@@ -101,6 +102,7 @@ PRODUCTS = [
 st.session_state.setdefault("cart", {})
 st.session_state.setdefault("is_agent", False)
 st.session_state.setdefault("show_modal", False)
+st.session_state.setdefault("agent_code", None)
 
 # --------------------------------------------------
 # FUNCTIONS
@@ -109,13 +111,15 @@ def add_to_cart(pid):
     st.session_state.cart[pid] = st.session_state.cart.get(pid, 0) + 1
     st.toast("Item added to cart 🛒")
 
-def activate_agent():
-    with st.spinner("Generating Agent Code..."):
+def purchase_agent():
+    with st.spinner("Processing purchase..."):
         time.sleep(1.5)
 
     st.session_state.is_agent = True
     st.session_state.show_modal = False
-    st.success(f"Agent Activated: AGENT-{random.randint(1000,9999)}")
+    agent_code = f"AGENT-{random.randint(1000,9999)}"
+    st.session_state.agent_code = agent_code
+    st.success(f"Package purchased: ₹{AGENT_PACKAGE_PRICE} — Agent Activated: {agent_code}")
     st.balloons()
 
 # --------------------------------------------------
@@ -140,6 +144,8 @@ with st.sidebar:
         st.divider()
         if st.session_state.is_agent:
             st.success("Agent Discount Applied (20%)")
+            if st.session_state.get("agent_code"):
+                st.caption(f"Agent ID: {st.session_state.agent_code}")
         st.subheader(f"Total: ₹{total:.2f}")
         st.button("Proceed to Checkout", type="primary", use_container_width=True)
 
@@ -154,6 +160,8 @@ with c2:
         st.button("Become an Agent 🛡️", on_click=lambda: st.session_state.update(show_modal=True))
     else:
         st.button("✅ Agent Active", disabled=True)
+        if st.session_state.get("agent_code"):
+            st.caption(f"ID: {st.session_state.agent_code}")
 
 st.divider()
 st.info("### Exclusive Lifestyle Collection\nDiscover premium ethnic wear, home decor & beauty products.")
@@ -165,7 +173,10 @@ if st.session_state.show_modal:
     with st.expander("🔐 Agent Registration", expanded=True):
         col_a, col_b = st.columns(2)
         with col_a:
-            st.button("Generate & Activate", on_click=activate_agent)
+            st.markdown(
+                f"### Agent Package\n**Price:** ₹{AGENT_PACKAGE_PRICE}\n\nActivate your agent account and get 20% discounts across products."
+            )
+            st.button(f"Purchase & Activate — ₹{AGENT_PACKAGE_PRICE}", on_click=purchase_agent)
         with col_b:
             st.button("Cancel", on_click=lambda: st.session_state.update(show_modal=False))
 
